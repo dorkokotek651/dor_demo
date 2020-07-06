@@ -1,7 +1,8 @@
 from time import sleep
+from typing import List
 
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -102,8 +103,56 @@ class General:
 
         assert last_slide == first_slide, "Customers carousel did not make a full round"
 
+    def click_send_in_order_call_popup(self, trying_to_fail=False):
+        submit_button = self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Button']")
+        submit_button.click()
 
+        if trying_to_fail:
+            errors = wait(self.driver, 3).until(EC.visibility_of_all_elements_located((
+                By.CSS_SELECTOR, "[class*='onUnloadPopup__InputError'] ")))  # type: List[WebElement]
+            assert errors[0].text == "שדה שם הוא שדה חובה", "Missing name error message is incorrect"
+            assert errors[1].text == "שדה אימייל הוא שדה חובה", "Missing email error message is incorrect"
+            assert errors[2].text == "שדה טלפון הוא שדה חובה", "Missing name error message is incorrect"
+        else:
+            self.verify_contact_request_submitted_successfully("frontend-developers")
 
+    def fill_order_call_submission(self, name, email, phone_number):
+        self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Div'] > div:nth-child(1) input").send_keys(
+            name)
+        self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Div'] > div:nth-child(2) input").send_keys(
+            email)
+        self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Div'] > div:nth-child(3) input").send_keys(
+            phone_number)
+
+    def click_send_in_footer_help_bar(self, trying_to_fail=False):
+        send_button = self.driver.find_element_by_css_selector("[class*='Footer__Button-sc']")
+        send_button.click()
+
+        if trying_to_fail:
+            errors = wait(self.driver, 3).until(EC.visibility_of_all_elements_located((
+                By.CSS_SELECTOR, "[class*='Footer__InputError']")))  # type: List[WebElement]
+            assert errors[0].text == "שדה שם הוא שדה חובה", "Missing name error message is incorrect"
+            assert errors[1].text == "שדה אימייל הוא שדה חובה", "Missing email error message is incorrect"
+            assert errors[2].text == "שדה טלפון הוא שדה חובה", "Missing name error message is incorrect"
+        else:
+            self.verify_contact_request_submitted_successfully("")
+
+    def verify_contact_request_submitted_successfully(self, url_to_wait_for):
+        wait(self.driver, 5).until(EC.url_contains("thank-you"))
+        thank_you_message = self.driver.find_element_by_css_selector("h1 span").text
+        assert thank_you_message == "תודה!", "Post submission thank you message is wrong!"
+
+        wait(self.driver, 3).until(EC.element_to_be_clickable((
+            By.CSS_SELECTOR, "[class*='thankYou__backLink']"))).click()
+        wait(self.driver, 5).until(EC.url_contains(url_to_wait_for))
+
+    def fill_footer_how_can_we_help_submission(self, name, email, phone_number):
+        self.driver.find_element_by_css_selector("[class*='Footer__Div'] > div:nth-child(1) input").send_keys(
+            name)
+        self.driver.find_element_by_css_selector("[class*='Footer__Div'] > div:nth-child(2) input").send_keys(
+            email)
+        self.driver.find_element_by_css_selector("[class*='Footer__Div'] > div:nth-child(3) input").send_keys(
+            phone_number)
 
 
 

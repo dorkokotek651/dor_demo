@@ -7,6 +7,8 @@ Test Scenarios for Assignment:
 
     a. Test "projects for example" carousel by scrolling the carousel until it returns to it's starting point.
     
+    b. Test "customers" carousel by scrolling the carousel until it returns to it's starting point.
+    
 
 3. "Order a Call" popup:
 
@@ -15,7 +17,7 @@ Test Scenarios for Assignment:
     b. Submitting normally and getting approved.
     
     
-3. Bottom "help request" bar:
+3. Footer "help request" bar:
 
     a. Verifying the bar is not displayed when scrolling to the bottom of the page.
      
