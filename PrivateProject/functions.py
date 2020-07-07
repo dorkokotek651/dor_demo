@@ -108,32 +108,18 @@ class General:
         submit_button.click()
 
         if trying_to_fail:
-            errors = wait(self.driver, 3).until(EC.visibility_of_all_elements_located((
-                By.CSS_SELECTOR, "[class*='onUnloadPopup__InputError'] ")))  # type: List[WebElement]
-            assert errors[0].text == "שדה שם הוא שדה חובה", "Missing name error message is incorrect"
-            assert errors[1].text == "שדה אימייל הוא שדה חובה", "Missing email error message is incorrect"
-            assert errors[2].text == "שדה טלפון הוא שדה חובה", "Missing name error message is incorrect"
+            self.verify_error_messages_in_any_form(
+                "onUnloadPopup", "שדה אימייל הוא שדה חובה", "שדה טלפון הוא שדה חובה", "שדה שם הוא שדה חובה")
         else:
             self.verify_contact_request_submitted_successfully("frontend-developers")
-
-    def fill_order_call_submission(self, name, email, phone_number):
-        self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Div'] > div:nth-child(1) input").send_keys(
-            name)
-        self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Div'] > div:nth-child(2) input").send_keys(
-            email)
-        self.driver.find_element_by_css_selector("[class*='onUnloadPopup__Div'] > div:nth-child(3) input").send_keys(
-            phone_number)
 
     def click_send_in_footer_help_bar(self, trying_to_fail=False):
         send_button = self.driver.find_element_by_css_selector("[class*='Footer__Button-sc']")
         send_button.click()
 
         if trying_to_fail:
-            errors = wait(self.driver, 3).until(EC.visibility_of_all_elements_located((
-                By.CSS_SELECTOR, "[class*='Footer__InputError']")))  # type: List[WebElement]
-            assert errors[0].text == "שדה שם הוא שדה חובה", "Missing name error message is incorrect"
-            assert errors[1].text == "שדה אימייל הוא שדה חובה", "Missing email error message is incorrect"
-            assert errors[2].text == "שדה טלפון הוא שדה חובה", "Missing name error message is incorrect"
+            self.verify_error_messages_in_any_form(
+                "Footer", "שדה אימייל הוא שדה חובה", "שדה טלפון הוא שדה חובה", "שדה שם הוא שדה חובה")
         else:
             self.verify_contact_request_submitted_successfully("")
 
@@ -146,13 +132,61 @@ class General:
             By.CSS_SELECTOR, "[class*='thankYou__backLink']"))).click()
         wait(self.driver, 5).until(EC.url_contains(url_to_wait_for))
 
-    def fill_footer_how_can_we_help_submission(self, name, email, phone_number):
-        self.driver.find_element_by_css_selector("[class*='Footer__Div'] > div:nth-child(1) input").send_keys(
-            name)
-        self.driver.find_element_by_css_selector("[class*='Footer__Div'] > div:nth-child(2) input").send_keys(
-            email)
-        self.driver.find_element_by_css_selector("[class*='Footer__Div'] > div:nth-child(3) input").send_keys(
-            phone_number)
+    def fill_generic_contact_request_submission(self, form_selector, name, email, phone_number, clear_first=False):
+        name_field = self.driver.find_element_by_css_selector(
+            "[class*='" + form_selector + "__Div'] > div:nth-child(1) input")
+        email_field = self.driver.find_element_by_css_selector(
+            "[class*='" + form_selector + "__Div'] > div:nth-child(2) input")
+        phone_field = self.driver.find_element_by_css_selector(
+            "[class*='" + form_selector + "__Div'] > div:nth-child(3) input")
+
+        if clear_first:
+            email_field.clear()
+            phone_field.clear()
+
+        name_field.send_keys(name)
+        email_field.send_keys(email)
+        # For some reason after clearing the fields and than filling email field again the phone field was filled
+        # with its last value so I had to add another clear
+        phone_field.clear()
+        phone_field.send_keys(phone_number)
+
+    def verify_error_messages_in_any_form(self, form_selector, email_error, phone_error, name_error=None):
+        errors = wait(self.driver, 3).until(EC.visibility_of_all_elements_located((
+            By.CSS_SELECTOR, "[class*='" + form_selector + "__InputError']")))  # type: List[WebElement]
+        if name_error is not None:
+            assert errors[0].text == name_error, "Name error message is incorrect"
+            assert errors[1].text == email_error, "Email error message is incorrect"
+            assert errors[2].text == phone_error, "Phone error message is incorrect"
+        else:
+            assert errors[0].text == email_error, "Email error message is incorrect"
+            assert errors[1].text == phone_error, "Phone error message is incorrect"
+
+    def click_talk_to_us_button_in_want_to_here_more_form(self, trying_to_fail=False):
+        talk_to_us_btn = self.driver.find_element_by_css_selector(
+            "[class*='ButtonContainer'] [class*='commun__ButtonContact']")
+        talk_to_us_btn.click()
+
+        if trying_to_fail:
+            errors = wait(self.driver, 3).until(EC.visibility_of_all_elements_located((
+                By.CSS_SELECTOR, "[class*='commun__ErrorText']")))  # type: List[WebElement]
+            assert errors[0].text == "שדה שם הוא שדה חובה", "Name error message is incorrect"
+            assert errors[1].text == "שדה חברה הוא שדה חובה", "Company error message is incorrect"
+            assert errors[2].text == "שדה אימייל הוא שדה חובה", "Email error message is incorrect"
+            assert errors[3].text == "שדה טלפון הוא שדה חובה", "Phone error message is incorrect"
+        else:
+            self.verify_contact_request_submitted_successfully("frontend-developers")
+
+    def fill_want_to_here_more_fields(self, name, company, email, phone_num):
+        self.driver.find_element_by_id("name").send_keys(name)
+        self.driver.find_element_by_id("company").send_keys(company)
+        self.driver.find_element_by_id("email").send_keys(email)
+        self.driver.find_element_by_id("telephone").send_keys(phone_num)
+
+    def click_scroll_back_to_top_btn(self):
+        self.driver.find_element_by_css_selector("[class*='backToTop']").click()
+        wait(self.driver, 5).until(EC.invisibility_of_element((By.CSS_SELECTOR, "[class*='backToTop']")))
+
 
 
 
